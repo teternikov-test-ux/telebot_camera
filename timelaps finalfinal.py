@@ -7,7 +7,6 @@ from telebot import types
 from datetime import datetime
 from config import timelapse_dir, token, usernames, ids, videourl
 
-dt = str(datetime.now().strftime('%D %H:%M:%S'))
 if not os.path.exists(timelapse_dir):
     os.mkdir(timelapse_dir)
 bot = telebot.TeleBot(token)
@@ -28,6 +27,7 @@ def start(m, res=False):
 
 @bot.message_handler(content_types=['text'])
 def photo(test):
+    dt = str(datetime.now().strftime('%D %H:%M:%S'))
     try:
         if test.text.strip() == 'фото' and test.from_user.username in usernames or test.text.strip() == 'фото' and test.from_user.id in ids:
             # При выборе параметра "Фото"
