@@ -20,7 +20,7 @@ def start(m, res=False):
         item2 = types.KeyboardButton("видео")
         markup.add(item1)
         markup.add(item2)
-        bot.send_message(m.chat.id, 'Нажми "фото" или "видео(таймлапс последних 200 фото)"', reply_markup=markup)
+        bot.send_message(m.chat.id, 'Нажми "фото" или "видео(таймлапс последних фото)"', reply_markup=markup)
     except TypeError:
         raise
 
@@ -28,6 +28,7 @@ def start(m, res=False):
 @bot.message_handler(content_types=['text'])
 def photo(test):
     dt = str(datetime.now().strftime('%D %H:%M:%S'))
+    message = test.message_id
     try:
         if test.text.strip() == 'фото' and test.from_user.username in usernames or test.text.strip() == 'фото' and test.from_user.id in ids:
             # При выборе параметра "Фото"
@@ -42,7 +43,7 @@ def photo(test):
             if success:
 
                 cv2.imwrite(filename, image)
-                bot.send_photo(test.chat.id, photo=open(filename, 'rb'), caption=f"{dt} Фото отправлено")
+                bot.send_photo(test.chat.id, photo=open(filename, 'rb'), caption=f"{dt} Фото отправлено", reply_to_message_id=message)
                 if test.from_user.username:
                     print(dt + " === сделано фото  " + test.from_user.username)
                 else:
@@ -58,18 +59,20 @@ def photo(test):
                                     (width, height))
             filesforvideo = glob.glob(f"{glob.escape(timelapse_dir)}/*.jpg")
             filesforvideo.sort(key=os.path.getmtime)
-
+            # Изменение разрешения видео
             for screenshot in filesforvideo:
                 origImage = cv2.imread(screenshot)
                 heightOrig, widthOrig, channelsOrig = origImage.shape
-                # Изменение разрешения видео
+                # Условие изменения разрешения видео
                 if height != heightOrig or width != widthOrig:
                     img = cv2.resize(origImage, (width, height))
                     video.write(img)
                 else:
+                    # Запись видео из скринов
                     video.write(origImage)
             video.release()
-            bot.send_video(test.chat.id, video=open(timelapse_dir + 'video.avi', 'rb'), caption=dt + 'получите видео')
+            # Отправляем видео в телегу
+            bot.send_video(test.chat.id, video=open(timelapse_dir + 'video.avi', 'rb'), caption=dt + 'получите видео', reply_to_message_id=message, timeout=300)
             if test.from_user.username:
                 print(dt + " === сделано видео  " + test.from_user.username)
             else:
@@ -80,8 +83,7 @@ def photo(test):
         raise
 
 
-bot.infinity_polling(interval=0, timeout=600)
-
+bot.infinity_polling(interval=0, timeout=600, long_polling_timeout=5)
 
 # schedule.every(1).seconds.do(photo)
 #
